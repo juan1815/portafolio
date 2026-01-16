@@ -1,25 +1,20 @@
 import { GoogleGenAI } from "@google/genai";
 import { SYSTEM_INSTRUCTION } from "../constants";
 
-// The API key must be obtained from the environment variable process.env.API_KEY.
-const getAiClient = () => {
-  const apiKey = process.env.API_KEY;
-  if (!apiKey) return null;
-  return new GoogleGenAI({ apiKey });
-};
-
 export const sendMessageToGemini = async (
   message: string,
   history: { role: 'user' | 'model'; parts: { text: string }[] }[]
 ): Promise<string> => {
-  const ai = getAiClient();
-  
-  if (!ai) {
-    return "Viernes Core: API Key not detected in system environment. Please check your configuration.";
+  // El API KEY se inyecta mediante el proceso de 'define' de Vite desde process.env.API_KEY
+  const apiKey = process.env.API_KEY;
+
+  if (!apiKey) {
+    return "Nexus Core: API Key no detectada. Por favor, verifica tu configuración de entorno.";
   }
 
   try {
-    // We use gemini-3-flash-preview as it's highly efficient and usually part of the free tier/trial.
+    const ai = new GoogleGenAI({ apiKey });
+    
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
       contents: [
@@ -33,12 +28,12 @@ export const sendMessageToGemini = async (
       }
     });
 
-    return response.text || "Communication established but no data returned.";
+    return response.text || "Comunicación establecida pero no se recibieron datos.";
   } catch (error: any) {
     console.error("Gemini API Error:", error);
     if (error.message?.includes('429')) {
-      return "Viernes Core: Rate limit exceeded (Free Tier). Please wait a moment before sending more data.";
+      return "Nexus Core: Límite de peticiones alcanzado. Espera un momento.";
     }
-    return "Viernes Core Error: Connection to the neural network failed. Please verify API status.";
+    return "Nexus Core Error: Fallo en la conexión con la red neuronal.";
   }
 };
